@@ -1,0 +1,48 @@
+package dev.sora.relay.cheat.module.impl.visual
+
+import dev.sora.relay.cheat.module.CheatCategory
+import dev.sora.relay.cheat.module.CheatModule
+import dev.sora.relay.game.entity.data.Effect
+import dev.sora.relay.game.event.EventPacketInbound
+import dev.sora.relay.game.event.EventTick
+import org.cloudburstmc.protocol.bedrock.data.entity.EntityDataMap
+import org.cloudburstmc.protocol.bedrock.data.entity.EntityFlag
+import org.cloudburstmc.protocol.bedrock.packet.AddEntityPacket
+import org.cloudburstmc.protocol.bedrock.packet.AddPlayerPacket
+import org.cloudburstmc.protocol.bedrock.packet.MobEffectPacket
+import org.cloudburstmc.protocol.bedrock.packet.SetEntityDataPacket
+
+class ModuleAntiBlind : CheatModule("AntiBlind", CheatCategory.VISUAL) {
+
+    private var nightVisionValue by boolValue("NightVision", true)
+    private var removeBadEffectsValue by boolValue("RemoveBadEffects", true)
+	override fun onDisable() {
+		if (nightVisionValue && session.netSessionInitialized) {
+			session.netSession.inboundPacket(MobEffectPacket().apply {
+				event = MobEffectPacket.Event.REMOVE
+				runtimeEntityId = session.player.runtimeEntityId
+				effectId = Effect.NIGHT_VISION
+			})
+		}
+	}
+
+	private val handleTick = handle<EventTick>(this::nightVisionValue) {
+		if (session.player.tickExists % 20 != 0L) return@handle
+		session.netSession.inboundPacket(MobEffectPacket().apply {
+			runtimeEntityId = session.player.runtimeEntityId
+			setEvent(MobEffectPacket.Event.ADD)
+			effectId = Effect.NIGHT_VISION
+			amplifier = 0
+			isParticles = false
+			duration = 360000
+		})
+	}
+
+	private val handlePacketInbound = handle<EventPacketInbound> {
+		if (removeBadEffectsValue && packet is MobEffectPacket) {
+			if (packet.effectId == Effect.NAUSEA || packet.effectId == Effect.BLINDNESS || packet.effectId == Effect.DARKNESS) {
+				cancel()
+			}
+		}
+	}
+}
