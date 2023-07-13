@@ -4,8 +4,8 @@ Based on ProtoHax
 # How to Build
 1. Run CloudBurstMC/Protocol publishToMavenLocal
 2. You need to download our depository
-3. Run ProtoHax publishToMavenLocal
-4. Open ProtoHax-Android
+3. Run NightMoon publishToMavenLocal
+4. Open NightMoon-Android
 5. Build Apk file
 
 # Something
